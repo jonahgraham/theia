@@ -4,7 +4,8 @@
   "description": "Theia - Cortex Debug Extension",
   "dependencies": {
     "@theia/debug": "^0.3.14",
-    "vscode-debugprotocol": "^1.26.0"
+    "vscode-debugprotocol": "^1.26.0",
+    "json-schema-defaults": "^0.4.0"
   },
   "publishConfig": {
     "access": "public"
@@ -48,6 +49,6 @@
   },
   "debugAdapter": {
     "downloadUrl": "https://github.com/Marus/cortex-debug/releases/download/v0.1.21-test2/cortex-debug-0.1.21-test2.vsix",
-    "dir": "lib/adapter/extension"
+    "dir": "lib/adapter"
   }
 }

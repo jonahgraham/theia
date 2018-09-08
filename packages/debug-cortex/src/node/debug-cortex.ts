@@ -17,10 +17,12 @@
 const path = require('path');
 const packageJson = require('../../package.json');
 const debugAdapterDir = packageJson['debugAdapter']['dir'];
+const cortexDebugpackageJson = require(`../../${debugAdapterDir}/extension/package.json`);
 
 import { injectable } from 'inversify';
 import { DebugConfiguration } from '@theia/debug/lib/common/debug-common';
 import { DebugAdapterContribution, DebugAdapterExecutable } from '@theia/debug/lib/node/debug-model';
+import * as defaults from 'json-schema-defaults';
 
 @injectable()
 export class CortexDebugAdapterContribution implements DebugAdapterContribution {
@@ -48,11 +50,35 @@ export class CortexDebugAdapterContribution implements DebugAdapterContribution 
             case 'launch': this.validateLaunchConfig(config);
         }
 
+        // Load all the defaults from the external cortex's package's json
+        // TODO this bit of code applies to all debug adapters
+        // TODO for general case: what if any of these keys is missing
+        const debuggers: any[] = cortexDebugpackageJson.contributes.debuggers;
+        const selected = debuggers.filter(e => e.type === this.debugType)[0];
+        const defaultSchema = selected.configurationAttributes[config.request];
+        defaultSchema.type = 'object';
+
+        const userConfig = config;
+        config = defaults(defaultSchema);
+        Object.assign(config, userConfig);
         return config;
     }
 
+    // private toDefaults(attributes: any) {
+    //     // if ("properties" in attributes) {
+    //     //     const propertyConfigs: any[] = attributes.properties;
+    //     //     return propertyConfigs.map(o => this.propertyConfigToDefault(o));
+    //     // }
+    //     // return undefined;
+    //     return defaults;
+    // }
+
+    // private propertyConfigToDefault(propertyConfig: any) {
+
+    // }
+
     provideDebugAdapterExecutable(config: DebugConfiguration): DebugAdapterExecutable {
-        const program = path.join(__dirname, `../../${debugAdapterDir}/out/src/gdb.js`);
+        const program = path.join(__dirname, `../../${debugAdapterDir}/extension/out/src/gdb.js`);
         return {
             program,
             runtime: 'node'
