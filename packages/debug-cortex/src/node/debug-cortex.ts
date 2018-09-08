@@ -51,8 +51,7 @@ export class CortexDebugAdapterContribution implements DebugAdapterContribution 
         }
 
         // Load all the defaults from the external cortex's package's json
-        // TODO this bit of code applies to all debug adapters
-        // TODO for general case: what if any of these keys is missing
+        // this is a workaround to avoid reimplementing CortexDebugConfigurationProvider
         const debuggers: any[] = cortexDebugpackageJson.contributes.debuggers;
         const selected = debuggers.filter(e => e.type === this.debugType)[0];
         const defaultSchema = selected.configurationAttributes[config.request];
@@ -61,23 +60,15 @@ export class CortexDebugAdapterContribution implements DebugAdapterContribution 
         const userConfig = config;
         config = defaults(defaultSchema);
         Object.assign(config, userConfig);
+
+        // Add in the other settings needed
+        config.extensionPath = path.join(__dirname, `../../${debugAdapterDir}/extension/`);
+
         return config;
     }
 
-    // private toDefaults(attributes: any) {
-    //     // if ("properties" in attributes) {
-    //     //     const propertyConfigs: any[] = attributes.properties;
-    //     //     return propertyConfigs.map(o => this.propertyConfigToDefault(o));
-    //     // }
-    //     // return undefined;
-    //     return defaults;
-    // }
-
-    // private propertyConfigToDefault(propertyConfig: any) {
-
-    // }
-
     provideDebugAdapterExecutable(config: DebugConfiguration): DebugAdapterExecutable {
+        // TODO get this from the package.json
         const program = path.join(__dirname, `../../${debugAdapterDir}/extension/out/src/gdb.js`);
         return {
             program,
