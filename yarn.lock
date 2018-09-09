@@ -781,7 +781,7 @@ are-we-there-yet@~1.1.2:
     delegates "^1.0.0"
     readable-stream "^2.0.6"
 
-argparse@^1.0.7:
+argparse@^1.0.7, argparse@^1.0.9:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/argparse/-/argparse-1.0.10.tgz#bcd6791ea5ae09725e17e5ad988134cd40b3d911"
   dependencies:
@@ -5436,6 +5436,12 @@ json-buffer@3.0.0:
 json-parse-better-errors@^1.0.1, json-parse-better-errors@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/json-parse-better-errors/-/json-parse-better-errors-1.0.2.tgz#bb867cfb3450e69107c131d1c514bab3dc8bcaa9"
+
+json-schema-defaults@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/json-schema-defaults/-/json-schema-defaults-0.4.0.tgz#b63ee7e7aa83f29b54cb31d31ecddeb056c3306c"
+  dependencies:
+    argparse "^1.0.9"
 
 json-schema-traverse@^0.3.0:
   version "0.3.1"
