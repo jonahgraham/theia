@@ -23,6 +23,7 @@ import { injectable } from 'inversify';
 import { DebugConfiguration } from '@theia/debug/lib/common/debug-common';
 import { DebugAdapterContribution, DebugAdapterExecutable } from '@theia/debug/lib/node/debug-model';
 import * as defaults from 'json-schema-defaults';
+import * as fs from 'fs';
 
 @injectable()
 export class CortexDebugAdapterContribution implements DebugAdapterContribution {
@@ -63,6 +64,10 @@ export class CortexDebugAdapterContribution implements DebugAdapterContribution 
 
         // Add in the other settings needed
         config.extensionPath = path.join(__dirname, `../../${debugAdapterDir}/extension/`);
+
+        // load the file and encode it
+        const elf = fs.readFileSync(config.executable);
+        config.elf_base64 = new Buffer(elf).toString('base64');
 
         return config;
     }
