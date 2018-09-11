@@ -56,7 +56,7 @@ import {
 import '../../src/browser/style/index.css';
 import { DebugThreadsWidget } from './view/debug-threads-widget';
 import { DebugStackFramesWidget } from './view/debug-stack-frames-widget';
-import { DebugBreakpointsWidget, BreakpointsDialog } from './view/debug-breakpoints-widget';
+import { DebugBreakpointsWidget, BreakpointsDialog, SessionStartFailedDialog } from './view/debug-breakpoints-widget';
 import { DebugSelectionService, DebugSelection } from './view/debug-selection-service';
 import { bindContributionProvider, ResourceResolver } from '@theia/core';
 import { ActiveLineDecorator, BreakpointDecorator } from './breakpoint/breakpoint-decorators';
@@ -106,6 +106,7 @@ function bindDebugView(bind: interfaces.Bind): void {
 
 function bindBreakpointsManager(bind: interfaces.Bind): void {
     bind(BreakpointsDialog).toSelf().inSingletonScope();
+    bind(SessionStartFailedDialog).toSelf().inSingletonScope();
     bind(ActiveLineDecorator).toSelf().inSingletonScope();
     bind(BreakpointDecorator).toSelf().inSingletonScope();
     bind(BreakpointStorage).toSelf().inSingletonScope();

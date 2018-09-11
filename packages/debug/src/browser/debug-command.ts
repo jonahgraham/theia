@@ -21,9 +21,9 @@ import { DebugService } from '../common/debug-common';
 import { DebugSessionManager } from './debug-session';
 import { DebugConfigurationManager } from './debug-configuration';
 import { DebugSelectionService } from './view/debug-selection-service';
-import { SingleTextInputDialog } from '@theia/core/lib/browser/dialogs';
+import { SingleTextInputDialog } from '@theia/core/lib/browser';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { BreakpointsDialog } from './view/debug-breakpoints-widget';
+import { BreakpointsDialog, SessionStartFailedDialog } from './view/debug-breakpoints-widget';
 
 export const DEBUG_SESSION_CONTEXT_MENU: MenuPath = ['debug-session-context-menu'];
 export const DEBUG_SESSION_THREAD_CONTEXT_MENU: MenuPath = ['debug-session-thread-context-menu'];
@@ -123,7 +123,8 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
         @inject(DebugSessionManager) protected readonly debugSessionManager: DebugSessionManager,
         @inject(DebugConfigurationManager) protected readonly debugConfigurationManager: DebugConfigurationManager,
         @inject(DebugSelectionService) protected readonly debugSelectionHandler: DebugSelectionService,
-        @inject(BreakpointsDialog) protected readonly breakpointsDialog: BreakpointsDialog
+        @inject(BreakpointsDialog) protected readonly breakpointsDialog: BreakpointsDialog,
+        @inject(SessionStartFailedDialog) protected readonly sessionStartFailedDialog: SessionStartFailedDialog
     ) { }
 
     registerMenus(menus: MenuModelRegistry): void {
@@ -216,7 +217,10 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
                     .then(configuration => this.debug.resolveDebugConfiguration(configuration))
                     .then(configuration => this.debug.start(configuration).then(sessionId => ({ sessionId, configuration })))
                     .then(({ sessionId, configuration }) => this.debugSessionManager.create(sessionId, configuration))
-                    .catch(error => console.log(error));
+                    .catch(error => {
+                        console.log(error);
+                        this.sessionStartFailedDialog.showSessionStartFailedDialog('https://google.com');
+                    });
             },
             isEnabled: () => true,
             isVisible: () => true

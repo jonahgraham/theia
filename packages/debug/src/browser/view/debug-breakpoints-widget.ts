@@ -170,6 +170,88 @@ export class BreakpointsDialog extends AbstractDialog<void> {
     get value(): void { return undefined; }
 }
 
+// @injectable()
+// export class SessionStartFailedDialog extends AbstractDialog<void> {
+//     constructor(@inject(BreakpointsManager) protected readonly breakpointManager: BreakpointsManager) {
+//         super({
+//             title: 'Your debug session failed to start'
+//         });
+//     }
+
+//     @postConstruct()
+//     protected init() {
+//         this.appendCloseButton('Close');
+//     }
+
+//     protected onAfterAttach(msg: Message): void {
+//         super.onAfterAttach(msg);
+//     }
+
+//     protected onBeforeDetach(msg: Message): void {
+//         super.onBeforeDetach(msg);
+//     }
+
+//     protected onUpdateRequest(msg: Message): void {
+//         super.onUpdateRequest(msg);
+//     }
+
+//     open(): Promise<void> {
+//         return super.open();
+//     }
+
+//     get value(): void { return undefined; }
+// }
+
+// TODO this does not belong here, but I have problems with circular dependencies, so need to learn a bit more
+// For example, I get injection error if the constructor has no injected params?
+@injectable()
+export class SessionStartFailedDialog extends AbstractDialog<void> {
+    // @inject(WindowService)
+    // protected readonly windowService: WindowService;
+    // protected downloadButton: HTMLButtonElement;
+    protected messageNode: HTMLDivElement;
+    protected linkNode: HTMLAnchorElement;
+
+    constructor(@inject(BreakpointsManager) protected readonly breakpointManager: BreakpointsManager) {
+        super({
+            title: 'Your debug session failed to start'
+        });
+
+    }
+
+    @postConstruct()
+    protected init() {
+        this.linkNode = document.createElement('a');
+        this.linkNode.target = '_blank';
+        this.linkNode.setAttribute('style', 'color: var(--theia-ui-dialog-font-color);');
+
+        const messageNode = document.createElement('div');
+        messageNode.innerText = 'Your debug session failed to start. Have you downloaded and run the USB Debug bridge?';
+        this.contentNode.appendChild(messageNode);
+        this.contentNode.appendChild(this.linkNode);
+        const messageNode2 = document.createElement('div');
+        messageNode2.innerText = '(See the logs for more details as to the error.)';
+        this.contentNode.appendChild(messageNode2);
+
+        this.appendCloseButton('Close');
+        // this.downloadButton = this.appendAcceptButton('Download');
+    }
+
+    showSessionStartFailedDialog(uri: string): Promise<void> {
+        this.linkNode.innerHTML = 'USB Debug Bridge (exe)';
+        this.linkNode.href = uri;
+        // this.downloadButton.onclick = () => {
+        //     // TODO the download button does not work
+        //     window.prompt('TODO make this button open the URL in the dialog');
+        //     // this.windowService.openNewWindow(uri);
+        // };
+
+        return this.open();
+    }
+
+    get value(): undefined { return undefined; }
+}
+
 namespace Styles {
     export const BREAKPOINTS = 'theia-debug-breakpoints';
     export const BREAKPOINT_ITEM = 'theia-debug-breakpoint-item';
