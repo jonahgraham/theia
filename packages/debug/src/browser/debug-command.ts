@@ -219,8 +219,8 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
                     .then(({ sessionId, configuration }) => this.debugSessionManager.create(sessionId, configuration))
                     .catch(error => {
                         console.log(error);
-                        const path = '/debug/files?uri=usbdebug.exe';
-                        let url = new Endpoint({ path }).getRestUrl().toString();
+                        const path = '/debug/files';
+                        const url = new Endpoint({ path }).getRestUrl().toString() + '?uri=usbdebug.exe';
                         this.sessionStartFailedDialog.showSessionStartFailedDialog(url);
                     });
             },
