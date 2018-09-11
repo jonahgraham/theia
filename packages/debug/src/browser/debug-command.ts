@@ -21,7 +21,7 @@ import { DebugService } from '../common/debug-common';
 import { DebugSessionManager } from './debug-session';
 import { DebugConfigurationManager } from './debug-configuration';
 import { DebugSelectionService } from './view/debug-selection-service';
-import { SingleTextInputDialog } from '@theia/core/lib/browser';
+import { SingleTextInputDialog, Endpoint } from '@theia/core/lib/browser';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointsDialog, SessionStartFailedDialog } from './view/debug-breakpoints-widget';
 
@@ -219,7 +219,9 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
                     .then(({ sessionId, configuration }) => this.debugSessionManager.create(sessionId, configuration))
                     .catch(error => {
                         console.log(error);
-                        this.sessionStartFailedDialog.showSessionStartFailedDialog('https://google.com');
+                        const path = '/debug/files?uri=usbdebug.exe';
+                        let url = new Endpoint({ path }).getRestUrl().toString();
+                        this.sessionStartFailedDialog.showSessionStartFailedDialog(url);
                     });
             },
             isEnabled: () => true,
