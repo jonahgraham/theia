@@ -309,8 +309,11 @@ export class DebugSessionManager {
 
         const initializeArgs: DebugProtocol.InitializeRequestArguments = {
             ...INITIALIZE_ARGUMENTS,
-            adapterID: debugConfiguration.type
+            adapterID: debugConfiguration.type,
         };
+        // if ('usbDebugHost' in debugConfiguration) {
+        //     initializeArgs.fullConfiguration = debugConfiguration;
+        // }
 
         return session.initialize(initializeArgs)
             .then(() => {
