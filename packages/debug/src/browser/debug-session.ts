@@ -84,7 +84,10 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
     private createWebSocket(): Promise<WebSocket> {
         const path = DebugAdapterPath + '/' + this.sessionId;
         let url = new Endpoint({ path }).getWebSocketUrl().toString();
-        url = 'ws://localhost:30784/' + path;
+        if ('usbDebugHost' in this.configuration) {
+            // We are connecting to an alternate endpoint
+            url = this.configuration.usbDebugHost + path;
+        }
         const websocket = new WebSocket(url);
 
         const initialized = new Deferred<WebSocket>();
