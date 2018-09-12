@@ -20,7 +20,8 @@ import {
     DebugAdapterPath,
     DebugConfiguration,
     DebugSessionState,
-    DebugSessionStateAccumulator
+    DebugSessionStateAccumulator,
+    ExtDebugProtocol
 } from '../common/debug-common';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { Deferred } from '@theia/core/lib/common/promise-util';
@@ -65,6 +66,7 @@ const INITIALIZE_ARGUMENTS = {
 export class DebugSessionImpl extends EventEmitter implements DebugSession {
     protected readonly toDispose = new DisposableCollection();
     protected readonly callbacks = new Map<number, (response: DebugProtocol.Response) => void>();
+    protected readonly requests = new Map<number, DebugProtocol.Request>();
 
     protected websocket: Promise<WebSocket>;
 
@@ -94,7 +96,16 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
 
         websocket.onopen = () => initialized.resolve(websocket);
         websocket.onclose = () => this.onClose();
-        websocket.onerror = () => initialized.reject(`Failed to establish connection with debug adapter by url: '${url}'`);
+        websocket.onerror = () => {
+            initialized.reject(`Failed to establish connection with debug adapter by url: '${url}'`);
+            const event: DebugProtocol.Event = {
+                type: 'event',
+                event: 'error',
+                seq: -1,
+                body: 'websocket failed'
+            };
+            this.proceedEvent(event);
+        };
         websocket.onmessage = (event: MessageEvent): void => this.handleMessage(event);
 
         return initialized.promise;
@@ -209,6 +220,7 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
                 result.resolve(response);
             }
         });
+        this.requests.set(request.seq, request);
 
         return this.websocket
             .then(websocket => websocket.send(JSON.stringify(request)))
@@ -220,6 +232,82 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
         if (callback) {
             this.callbacks.delete(response.request_seq);
             callback(response);
+        }
+        const request = this.requests.get(response.request_seq);
+        if (request) {
+            this.requests.delete(response.request_seq);
+        }
+
+        if (response.success) {
+            switch (response.command) {
+                case 'attach':
+                case 'launch': {
+                    const event: ExtDebugProtocol.ConnectedEvent = {
+                        type: 'event',
+                        seq: -1,
+                        event: 'connected'
+                    };
+
+                    this.emit(event.event, event);
+                    break;
+                }
+
+                case 'configurationDone': {
+                    const event: ExtDebugProtocol.ConfigurationDoneEvent = {
+                        type: 'event',
+                        seq: -1,
+                        event: 'configurationDone'
+                    };
+                    this.emit(event.event, event);
+                    break;
+                }
+
+                case 'setVariable': {
+                    const setVariableRequest = request as DebugProtocol.SetVariableRequest;
+                    const event: ExtDebugProtocol.VariableUpdatedEvent = {
+                        type: 'event',
+                        seq: -1,
+                        event: 'variableUpdated',
+                        body: {
+                            ...response.body,
+                            name: setVariableRequest.arguments.name,
+                            parentVariablesReference: setVariableRequest.arguments.variablesReference,
+                        }
+                    };
+                    this.emit(event.event, event);
+                    break;
+                }
+
+                case 'continue': {
+                    const continueRequest = request as DebugProtocol.ContinueRequest;
+                    const continueResponse = response as DebugProtocol.ContinueResponse;
+                    const event: DebugProtocol.ContinuedEvent = {
+                        type: 'event',
+                        seq: -1,
+                        event: 'continued',
+                        body: {
+                            threadId: continueRequest.arguments.threadId,
+                            allThreadsContinued: continueResponse.body && continueResponse.body.allThreadsContinued
+                        }
+                    };
+                    this.emit(event.event, event);
+                    break;
+                }
+
+                case 'initialized': {
+                    const initializeResponse = response as DebugProtocol.InitializeResponse;
+                    const event: DebugProtocol.CapabilitiesEvent = {
+                        type: 'event',
+                        seq: -1,
+                        event: 'capabilities',
+                        body: {
+                            capabilities: initializeResponse.body || {}
+                        }
+                    };
+                    this.emit(event.event, event);
+                    break;
+                }
+            }
         }
     }
 
@@ -240,6 +328,7 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
 
     dispose() {
         this.callbacks.clear();
+        this.requests.clear();
         this.websocket
             .then(websocket => websocket.close())
             .catch(error => console.error(error));

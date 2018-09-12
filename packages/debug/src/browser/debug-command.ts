@@ -24,6 +24,7 @@ import { DebugSelectionService } from './view/debug-selection-service';
 import { SingleTextInputDialog, Endpoint } from '@theia/core/lib/browser';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointsDialog, SessionStartFailedDialog } from './view/debug-breakpoints-widget';
+import { UUID } from '@phosphor/coreutils';
 
 export const DEBUG_SESSION_CONTEXT_MENU: MenuPath = ['debug-session-context-menu'];
 export const DEBUG_SESSION_THREAD_CONTEXT_MENU: MenuPath = ['debug-session-thread-context-menu'];
@@ -215,11 +216,19 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
             execute: () => {
                 this.debugConfigurationManager.selectConfiguration()
                     .then(configuration => this.debug.resolveDebugConfiguration(configuration))
-                    .then(configuration => this.debug.start(configuration).then(sessionId => ({ sessionId, configuration })))
-                    .then(({ sessionId, configuration }) => this.debugSessionManager.create(sessionId, configuration))
+                    .then(configuration => {
+                        if ('usbDebugHost' in configuration) {
+                            const sessionId = UUID.uuid4();
+                            return Promise.resolve({ sessionId, configuration });
+                        } else {
+                            return this.debug.start(configuration).then(sessionId => ({ sessionId, configuration }));
+                        }
+                    }).then(({ sessionId, configuration }) => this.debugSessionManager.create(sessionId, configuration))
                     .catch(error => {
                         console.log(error);
+                        // TODO only show this pop-up when it is relevant
                         const path = '/debug/files';
+                        // TODO use a useful uri here (get from backend?) and platform dependent
                         const url = new Endpoint({ path }).getRestUrl().toString() + '?uri=usbdebug.exe';
                         this.sessionStartFailedDialog.showSessionStartFailedDialog(url);
                     });
@@ -422,7 +431,7 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
         }
 
         const selection = this.debugSelectionHandler.get(debugSession.sessionId);
-        return !!selection && !!selection.thread && !!debugSession.state.stoppedThreadIds.has(selection.thread.id);
+        return !!selection && !!selection.thread && (!!debugSession.state.stoppedThreadIds.has(selection.thread.id) || !!debugSession.state.allThreadsStopped);
     }
 
     private isSelectedThreadResumed(): boolean {
@@ -432,7 +441,7 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
         }
 
         const selection = this.debugSelectionHandler.get(debugSession.sessionId);
-        return !!selection && !!selection.thread && !debugSession.state.stoppedThreadIds.has(selection.thread.id);
+        return !!selection && !!selection.thread && (!debugSession.state.stoppedThreadIds.has(selection.thread.id) || !debugSession.state.allThreadsStopped);
     }
 
     private getSelectedThreadId(sessionId: string): number | undefined {
