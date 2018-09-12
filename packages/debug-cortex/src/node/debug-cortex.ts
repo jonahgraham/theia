@@ -65,9 +65,13 @@ export class CortexDebugAdapterContribution implements DebugAdapterContribution 
         // Add in the other settings needed
         config.extensionPath = path.join(__dirname, `../../${debugAdapterDir}/extension/`);
 
-        // load the file and encode it
-        const elf = fs.readFileSync(config.executable);
-        config.elf_base64 = new Buffer(elf).toString('base64');
+        if ('usbDebugHost' in config) {
+            // load the file and encode it
+            // TODO in the future the usbdebug.exe could go back to the
+            // server to get this file
+            const elf = fs.readFileSync(config.executable);
+            config.elf_base64 = new Buffer(elf).toString('base64');
+        }
 
         return config;
     }
