@@ -238,7 +238,7 @@ export class BreakpointsManager implements FrontendApplicationContribution {
     private onThreadStopped(debugSession: DebugSession, event: DebugProtocol.StoppedEvent): void {
         const body = event.body;
 
-        if (body.threadId) {
+        if ('threadId' in body && body.threadId !== undefined) {
             switch (body.reason) {
                 case 'exception':
                 case 'breakpoint':

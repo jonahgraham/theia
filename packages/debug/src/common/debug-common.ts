@@ -271,7 +271,7 @@ export class DebugSessionStateAccumulator implements DebugSessionState {
         const body = event.body;
 
         this.allThreadsStopped = body.allThreadsStopped;
-        if (body.threadId) {
+        if ('threadId' in body && body.threadId !== undefined) {
             this.stoppedThreadIds.add(body.threadId);
         }
     }
