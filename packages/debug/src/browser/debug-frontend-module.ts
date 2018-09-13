@@ -38,7 +38,8 @@ import {
     defaultTreeProps,
     TreeModelImpl,
     TreeModel,
-    FrontendApplicationContribution
+    FrontendApplicationContribution,
+    KeybindingContribution
 } from '@theia/core/lib/browser';
 import {
     DebugSession,
@@ -77,6 +78,7 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     bindDebugView(bind);
 
     bind(MenuContribution).to(DebugCommandHandlers);
+    bind(KeybindingContribution).to(DebugCommandHandlers);
     bind(CommandContribution).to(DebugCommandHandlers);
     bind(DebugConfigurationManager).toSelf().inSingletonScope();
 

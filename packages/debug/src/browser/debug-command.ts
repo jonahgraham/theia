@@ -21,7 +21,7 @@ import { DebugService } from '../common/debug-common';
 import { DebugSessionManager } from './debug-session';
 import { DebugConfigurationManager } from './debug-configuration';
 import { DebugSelectionService } from './view/debug-selection-service';
-import { SingleTextInputDialog, Endpoint } from '@theia/core/lib/browser';
+import { SingleTextInputDialog, Endpoint, KeybindingContribution, KeybindingRegistry } from '@theia/core/lib/browser';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointsDialog, SessionStartFailedDialog } from './view/debug-breakpoints-widget';
 import { UUID } from '@phosphor/coreutils';
@@ -118,7 +118,7 @@ export namespace DEBUG_COMMANDS {
 }
 
 @injectable()
-export class DebugCommandHandlers implements MenuContribution, CommandContribution {
+export class DebugCommandHandlers implements MenuContribution, CommandContribution, KeybindingContribution {
     constructor(
         @inject(DebugService) protected readonly debug: DebugService,
         @inject(DebugSessionManager) protected readonly debugSessionManager: DebugSessionManager,
@@ -421,6 +421,24 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
                 const selection = this.debugSelectionHandler.get(debugSession.sessionId);
                 return !!selection && !!selection.variable;
             }
+        });
+    }
+
+    registerKeybindings(keybindings: KeybindingRegistry): void {
+        [{
+            command: DEBUG_COMMANDS.STEPIN.id,
+            keybinding: 'f11'
+        },
+        {
+            command: DEBUG_COMMANDS.STEPOUT.id,
+            keybinding: 'shift+f11'
+        },
+        {
+            command: DEBUG_COMMANDS.STEP.id,
+            keybinding: 'f10'
+        },
+        ].forEach(binding => {
+            keybindings.registerKeybinding(binding);
         });
     }
 
